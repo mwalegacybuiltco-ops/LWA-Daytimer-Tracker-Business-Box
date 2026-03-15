@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#081120" />
+  <title>LegacyBuilt Dual Tracker PWA</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --bg: #081120;
+      --bg2: #0b1528;
+      --card: #101b31;
+      --card-2: #16233d;
+      --line: rgba(255,255,255,0.08);
+      --text: #f4f7fb;
+      --muted: #aeb8c7;
+      --accent: #8f7cff;
+      --accent-2: #caa95d;
+      --danger: #ff7b7b;
+      --ok: #72d39a;
+      --radius: 18px;
+      --shadow: 0 14px 35px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: linear-gradient(180deg, #06101e 0%, #081120 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+    .sidebar {
+      border-right: 1px solid var(--line);
+      padding: 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      background: rgba(4,10,21,.85);
+      backdrop-filter: blur(10px);
+    }
+    .brand { font-size: 14px; color: var(--muted); padding: 10px 12px; margin-bottom: 12px; }
+    .nav-btn {
+      width: 100%; text-align: left; border: 1px solid transparent; background: transparent; color: var(--text);
+      padding: 18px 16px; border-radius: 20px; font-size: 18px; cursor: pointer; margin-bottom: 10px;
+    }
+    .nav-btn.active { background: #202a42; border-color: rgba(255,255,255,.08); }
+    .main { padding: 24px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .title-wrap h1 { margin: 0; font-size: 28px; }
+    .subtitle { color: var(--muted); margin-top: 6px; font-size: 14px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      border: 0; border-radius: 14px; padding: 12px 16px; cursor: pointer; background: var(--accent); color: white;
+      font-weight: 600; box-shadow: var(--shadow);
+    }
+    .btn.secondary { background: #233250; }
+    .btn.gold { background: var(--accent-2); color: #111; }
+    .btn.ghost { background: transparent; border: 1px solid var(--line); box-shadow: none; color: var(--text); }
+    .btn.small { padding: 8px 12px; border-radius: 10px; font-size: 13px; }
+    .panel, .card {
+      background: rgba(16,27,49,.95);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel { padding: 18px; }
+    .card { padding: 16px; }
+    .grid { display: grid; gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    h3 { margin: 0 0 12px; }
+    label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--muted); }
+    input[type="text"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="number"], select, textarea {
+      width: 100%; background: #0d1730; border: 1px solid rgba(255,255,255,.08); color: var(--text);
+      border-radius: 12px; padding: 12px; margin-bottom: 12px;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+    .row { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .tiny-row { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .muted { color: var(--muted); }
+    .list { display: grid; gap: 12px; }
+    .item { padding: 14px; border-radius: 14px; background: #0d1730; border: 1px solid rgba(255,255,255,.08); }
+    .item-head { display: flex; justify-content: space-between; gap: 10px; align-items: start; flex-wrap: wrap; margin-bottom: 8px; }
+    .split-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .metric { font-size: 30px; font-weight: 700; margin-bottom: 6px; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; font-size: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: var(--muted); }
+    .tag { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: 11px; background: rgba(143,124,255,.15); color: #d8d1ff; }
+    .checkboxes { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px 14px; margin-bottom: 12px; }
+    .checkboxes label { display: flex; align-items: center; gap: 8px; color: var(--text); margin: 0; }
+    .status { margin-top: 12px; font-size: 13px; color: var(--ok); min-height: 18px; }
+    .danger { color: var(--danger); }
+    .hidden { display: none !important; }
+    .calendar-toolbar { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; }
+    .dow, .day-cell {
+      background: #0d1730; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; min-height: 95px; padding: 10px;
+    }
+    .dow { min-height: auto; text-align: center; color: var(--muted); font-size: 12px; }
+    .day-cell.other-month { opacity: 0.45; }
+    .day-cell.selected { outline: 2px solid var(--accent); }
+    .day-number { font-size: 13px; margin-bottom: 8px; }
+    .calendar-chip {
+      display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 11px; margin-bottom: 4px; padding: 4px 7px; border-radius: 999px; background: rgba(202,169,93,.15); color: #f1ddb0;
+    }
+    .section-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    iframe.hidden-frame { width: 0; height: 0; border: 0; position: absolute; left: -9999px; }
+    @media (max-width: 920px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      .grid.two, .grid.three, .grid.four, .row, .tiny-row, .calendar-grid, .checkboxes { grid-template-columns: 1fr; }
+      .main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">LegacyBuilt Dual Tracker PWA</div>
+      <div id="nav"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h1 id="pageTitle">Dashboard</h1>
+          <div class="subtitle" id="pageSubtitle">Editable, saveable, and ready for each user’s own Google Form.</div>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="saveAllBtn">Save All</button>
+          <button class="btn gold" id="exportBtn">Export Backup</button>
+          <button class="btn ghost" id="importBtn">Import Backup</button>
+          <input id="importFile" class="hidden" type="file" accept="application/json" />
+        </div>
+      </div>
+      <div id="page"></div>
+    </main>
+  </div>
+
+  <iframe name="hidden_gf_target" class="hidden-frame"></iframe>
+
+  <script>
+    const SECTIONS = [
+      { id: 'dashboard', label: 'Dashboard', subtitle: 'Snapshot of your LWA system and your own business.' },
+      { id: 'lwa', label: 'LWA Lead Tracker', subtitle: 'Track LWA leads, follow-up timing, source, and status.' },
+      { id: 'business', label: 'Your Business', subtitle: 'A separate tracker for the business you are building alongside LWA.' },
+      { id: 'lwa-content', label: 'LWA Content', subtitle: 'Track content for LWA separately from your own business content.' },
+      { id: 'business-content', label: 'Your Business Content', subtitle: 'Track content for your own business with the same structure.' },
+      { id: 'calendar', label: 'Calendar', subtitle: 'An actual month calendar for dated tasks, content, and follow-up items.' },
+      { id: 'brand', label: 'Brand Settings', subtitle: 'Business names, platform labels, and Google Form setup.' },
+      { id: 'weekly-dashboard', label: 'Weekly Dashboard', subtitle: 'Weekly goals, totals, and progress.' },
+      { id: 'weekly-flow', label: 'Weekly Flow', subtitle: 'Plan your week with focused priorities.' },
+      { id: 'daily', label: 'Daily Tracker', subtitle: 'Track your daily actions and consistency.' },
+      { id: 'affiliate', label: 'Affiliate Health', subtitle: 'Watch affiliate energy, pipeline, and activity.' },
+      { id: 'ambassador', label: 'Ambassador Pipeline', subtitle: 'Track ambassador prospects, status, and notes.' },
+      { id: 'reflection', label: 'Reflection Section', subtitle: 'Daily and weekly reflections, lessons, and wins.' }
+    ];
+
+    const defaultState = {
+      brandSettings: {
+        ownerName: '',
+        lwaBusinessName: 'LWA',
+        personalBusinessName: 'Your Business',
+        lwaFormURL: '',
+        businessFormURL: '',
+        platformNames: {
+          facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', email: 'Email', group: 'FB Group', other: 'Other'
+        },
+        googleForms: Object.fromEntries(SECTIONS.map(s => [s.id, { formId: '', mapping: '{}' }]))
+      },
+      lwaSectionSettings: { businessName: 'LWA', mainOffer: '', currentGoal: '', bestPlatform: '', mainProduct: '', tagline: '', notes: '' },
+      businessSectionSettings: { businessName: 'Your Business', mainOffer: '', currentGoal: '', bestPlatform: '', mainProduct: '', tagline: '', notes: '' },
+      lwaLeads: [],
+      businessLeads: [],
+      lwaContent: [],
+      businessContent: [],
+      calendarItems: [],
+      calendarViewMonth: todayMonth(),
+      selectedCalendarDate: todayDate(),
+      weeklyDashboard: { weekOf: '', lwaGoal: 10, businessGoal: 10, lwaContentGoal: 7, businessContentGoal: 7, followupGoal: 25, notes: '' },
+      weeklyFlow: { monday: '', tuesday: '', wednesday: '', thursday: '', friday: '', saturday: '', sunday: '' },
+      dailyTracker: { date: '', addPeople: 0, startConversations: 0, followUps: 0, posts: 0, stories: 0, lives: 0, notes: '', platforms: [] },
+      affiliateHealth: { activeAffiliates: 0, checkinsDone: 0, pendingSupport: 0, wins: '', needsAttention: '' },
+      ambassadorPipeline: [],
+      reflection: { todayWin: '', todayLesson: '', gratefulFor: '', tomorrowFocus: '' }
+    };
+
+    const state = loadState();
+    let currentPage = 'dashboard';
+
+    function deepMerge(base, incoming) {
+      if (Array.isArray(base)) return Array.isArray(incoming) ? incoming : base;
+      if (typeof base === 'object' && base && typeof incoming === 'object' && incoming) {
+        const out = { ...base };
+        for (const key of Object.keys(incoming)) out[key] = key in base ? deepMerge(base[key], incoming[key]) : incoming[key];
+        return out;
+      }
+      return incoming === undefined ? base : incoming;
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem('legacybuilt_dual_tracker_state_v5');
+        if (!raw) return structuredClone(defaultState);
+        return deepMerge(structuredClone(defaultState), JSON.parse(raw));
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function persistState(message = 'Saved locally on this device.') {
+      localStorage.setItem('legacybuilt_dual_tracker_state_v5', JSON.stringify(state));
+      const status = document.querySelector('.status');
+      if (status) status.textContent = message;
+    }
+
+    function render() {
+      document.getElementById('nav').innerHTML = SECTIONS.map(section => `<button class="nav-btn ${currentPage === section.id ? 'active' : ''}" data-page="${section.id}">${section.label}</button>`).join('');
+      const meta = SECTIONS.find(s => s.id === currentPage);
+      document.getElementById('pageTitle').textContent = meta.label;
+      document.getElementById('pageSubtitle').textContent = meta.subtitle;
+      document.getElementById('page').innerHTML = pageHtml(currentPage);
+      bindGlobalEvents();
+      bindPageEvents();
+    }
+
+    function pageHtml(page) {
+      switch(page) {
+        case 'dashboard': return dashboardHtml();
+        case 'lwa': return trackerHtml('lwa');
+        case 'business': return trackerHtml('business');
+        case 'lwa-content': return contentHtml('lwa');
+        case 'business-content': return contentHtml('business');
+        case 'calendar': return calendarHtml();
+        case 'brand': return brandHtml();
+        case 'weekly-dashboard': return weeklyDashboardHtml();
+        case 'weekly-flow': return weeklyFlowHtml();
+        case 'daily': return dailyHtml();
+        case 'affiliate': return affiliateHtml();
+        case 'ambassador': return ambassadorHtml();
+        case 'reflection': return reflectionHtml();
+        default: return '<div class="panel">Not found.</div>';
+      }
+    }
+
+    function dashboardHtml() {
+      const lwaOpen = state.lwaLeads.filter(x => x.status !== 'Closed').length;
+      const bizOpen = state.businessLeads.filter(x => x.status !== 'Closed').length;
+      const selectedDate = state.selectedCalendarDate || todayDate();
+      const dayItems = getCalendarItemsForDate(selectedDate);
+      const w = state.weeklyDashboard || {};
+      const d = state.dailyTracker || {};
+      const weeklyFlowFilled = Object.values(state.weeklyFlow || {}).filter(Boolean).length;
+      return `
+        <div class="grid four">
+          ${cardMetric('LWA Leads', state.lwaLeads.length, `${lwaOpen} still active`)}
+          ${cardMetric((state.brandSettings.personalBusinessName || 'Your Business') + ' Leads', state.businessLeads.length, `${bizOpen} still active`)}
+          ${cardMetric('LWA Content Pieces', state.lwaContent.length, 'Saved and editable')}
+          ${cardMetric('Your Business Content', state.businessContent.length, 'Saved and editable')}
+        </div>
+        <div class="grid four" style="margin-top:16px;">
+          ${cardMetric('Weekly LWA Goal', Number(w.lwaGoal || 0), `${state.lwaLeads.length} saved leads`) }
+          ${cardMetric('Weekly Business Goal', Number(w.businessGoal || 0), `${state.businessLeads.length} saved leads`) }
+          ${cardMetric('Daily Follow Ups', Number(d.followUps || 0), `Date: ${escapeHtml(d.date || 'Not set')}`) }
+          ${cardMetric('Weekly Flow Days Planned', weeklyFlowFilled, 'Pulled from Weekly Flow') }
+        </div>
+        <div class="grid two" style="margin-top:16px;">
+          <div class="panel">
+            <h3>Quick Notes</h3>
+            <label>What matters most this week</label>
+            <textarea id="dashNotes">${escapeHtml(state.weeklyDashboard.notes || '')}</textarea>
+            <div class="split-actions">
+              <button class="btn" data-action="save-dashboard">Save</button>
+              <button class="btn gold" data-gform="dashboard">Save to Google Form</button>
+            </div>
+            <div class="status"></div>
+          </div>
+          <div class="panel">
+            <h3>Calendar Snapshot</h3>
+            <div class="muted">Selected date: ${escapeHtml(selectedDate)}</div>
+            <div class="list" style="margin-top:12px;">
+              ${dayItems.length ? dayItems.slice(0,5).map(item => `<div class="item"><strong>${escapeHtml(item.title)}</strong><div class="muted">${escapeHtml(item.type)} • ${escapeHtml(item.related || '')}</div></div>`).join('') : '<div class="muted">Nothing on this date yet.</div>'}
+            </div>
+          </div>
+        </div>
+        <div class="grid two" style="margin-top:16px;">
+          <div class="panel">
+            <h3>Weekly Dashboard Snapshot</h3>
+            <div class="list">
+              <div class="item"><strong>Week Of</strong><div class="muted">${escapeHtml(w.weekOf || 'Not set')}</div></div>
+              <div class="item"><strong>LWA Content Goal</strong><div class="muted">${Number(w.lwaContentGoal || 0)}</div></div>
+              <div class="item"><strong>Your Business Content Goal</strong><div class="muted">${Number(w.businessContentGoal || 0)}</div></div>
+              <div class="item"><strong>Follow Up Goal</strong><div class="muted">${Number(w.followupGoal || 0)}</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Daily Tracker Snapshot</h3>
+            <div class="list">
+              <div class="item"><strong>Add People</strong><div class="muted">${Number(d.addPeople || 0)}</div></div>
+              <div class="item"><strong>Start Conversations</strong><div class="muted">${Number(d.startConversations || 0)}</div></div>
+              <div class="item"><strong>Posts / Stories / Lives</strong><div class="muted">${Number(d.posts || 0)} / ${Number(d.stories || 0)} / ${Number(d.lives || 0)}</div></div>
+              <div class="item"><strong>Platforms</strong><div class="muted">${escapeHtml((d.platforms || []).join(', ') || 'None selected')}</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Weekly Flow Snapshot</h3>
+          <div class="grid two">
+            ${['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(day => `<div class="item"><strong>${day.charAt(0).toUpperCase()+day.slice(1)}</strong><div class="muted">${escapeHtml((state.weeklyFlow && state.weeklyFlow[day]) || 'Nothing planned yet')}</div></div>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function cardMetric(label, value, detail='') {
+      return `<div class="card"><div class="metric">${value}</div><div>${label}</div><div class="muted">${detail}</div></div>`;
+    }
+
+    function sectionSettingsHtml(type) {
+      const isLwa = type === 'lwa';
+      const settings = isLwa ? state.lwaSectionSettings : state.businessSectionSettings;
+      const prefix = isLwa ? 'lwaSettings' : 'businessSettings';
+      const formKey = isLwa ? 'lwa' : 'business';
+      const label = isLwa ? 'LWA Settings' : 'Your Business Settings';
+      return `
+        <div class="panel" style="margin-bottom:16px;">
+          <h3>${label}</h3>
+          <div class="row">
+            <div><label>Business Name</label><input id="${prefix}BusinessName" type="text" value="${escapeHtml(settings.businessName || '')}" /></div>
+            <div><label>Main Offer</label><input id="${prefix}MainOffer" type="text" value="${escapeHtml(settings.mainOffer || '')}" /></div>
+          </div>
+          <div class="row">
+            <div><label>Current Goal</label><input id="${prefix}CurrentGoal" type="text" value="${escapeHtml(settings.currentGoal || '')}" /></div>
+            <div><label>Best Platform</label><input id="${prefix}BestPlatform" type="text" value="${escapeHtml(settings.bestPlatform || '')}" /></div>
+          </div>
+          <div class="row">
+            <div><label>Main Product</label><input id="${prefix}MainProduct" type="text" value="${escapeHtml(settings.mainProduct || '')}" /></div>
+            <div><label>Tagline / Positioning</label><input id="${prefix}Tagline" type="text" value="${escapeHtml(settings.tagline || '')}" /></div>
+          </div>
+          <label>Notes</label>
+          <textarea id="${prefix}Notes">${escapeHtml(settings.notes || '')}</textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-${formKey}-settings">Save ${isLwa ? 'LWA' : 'Business'} Info</button>
+            <button class="btn gold" data-gform="${formKey}">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+      `;
+    }
+
+    function trackerHtml(type) {
+      const isLwa = type === 'lwa';
+      const list = isLwa ? state.lwaLeads : state.businessLeads;
+      const title = isLwa ? 'LWA Lead Tracker' : (state.brandSettings.personalBusinessName || 'Your Business');
+      const prefix = isLwa ? 'lwa' : 'business';
+      const editingIndex = document.body.dataset[`${prefix}Editing`] || '';
+      return `
+        ${sectionSettingsHtml(type)}
+        <div class="panel">
+          <div class="section-header">
+            <h3>${editingIndex !== '' ? 'Edit' : 'Add'} ${title} Lead</h3>
+            <button class="btn ghost small" data-action="clear-${prefix}-form">Clear Form</button>
+          </div>
+          <input id="${prefix}EditingIndex" type="hidden" value="${editingIndex}" />
+          <div class="row">
+            <div><label>Name</label><input id="${prefix}Name" type="text" /></div>
+            <div><label>Status</label><select id="${prefix}Status"><option>New</option><option>Contacted</option><option>Follow Up</option><option>Watching</option><option>Closed</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Platform</label><input id="${prefix}Platform" type="text" placeholder="Facebook, TikTok, etc." /></div>
+            <div><label>Follow-Up Stage</label><select id="${prefix}Follow"><option>24 Hour</option><option>48 Hour</option><option>72 Hour</option><option>30 Day</option><option>Custom</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Lead Date</label><input id="${prefix}Date" type="date" /></div>
+            <div><label>Follow-Up Date</label><input id="${prefix}CustomDate" type="date" /></div>
+          </div>
+          <label>Notes</label>
+          <textarea id="${prefix}Notes"></textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-${prefix}-lead">Save Lead</button>
+            <button class="btn ghost" data-action="add-${prefix}-lead-calendar">Save Lead + Add to Calendar</button>
+            <button class="btn gold" data-gform="${prefix === 'lwa' ? 'lwa' : 'business'}">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>${title} Leads</h3>
+          <div class="list">
+            ${list.length ? list.map((lead, i) => `
+              <div class="item">
+                <div class="item-head">
+                  <div><strong>${escapeHtml(lead.name || 'Unnamed')}</strong><br /><span class="muted">${escapeHtml(lead.platform || '')}</span></div>
+                  <span class="tag">${escapeHtml(lead.status || 'New')}</span>
+                </div>
+                <div class="muted">Lead Date: ${escapeHtml(lead.date || '')} ${lead.followUpDate ? '• Follow-Up: ' + escapeHtml(lead.followUpDate) : ''}</div>
+                <div style="margin-top:8px;">${escapeHtml(lead.notes || '')}</div>
+                <div class="split-actions">
+                  <button class="btn secondary small" data-action="load-lead-form" data-type="${prefix}" data-index="${i}">Edit</button>
+                  <button class="btn ghost small" data-action="to-calendar" data-type="${prefix}" data-index="${i}">Add to Calendar</button>
+                  <button class="btn ghost small danger" data-action="delete-lead" data-type="${prefix}" data-index="${i}">Delete</button>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">No leads yet.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function contentHtml(type) {
+      const isLwa = type === 'lwa';
+      const list = isLwa ? state.lwaContent : state.businessContent;
+      const key = isLwa ? 'lwaContent' : 'businessContent';
+      const sectionId = isLwa ? 'lwa-content' : 'business-content';
+      const title = isLwa ? 'LWA Content Tracking' : `${state.brandSettings.personalBusinessName || 'Your Business'} Content Tracking`;
+      const editingIndex = document.body.dataset[`${key}Editing`] || '';
+      return `
+        <div class="panel">
+          <div class="section-header">
+            <h3>${editingIndex !== '' ? 'Edit' : 'Add'} Content</h3>
+            <button class="btn ghost small" data-action="clear-${key}-form">Clear Form</button>
+          </div>
+          <div class="row">
+            <div><label>Content Title</label><input id="${key}Title" type="text" /></div>
+            <div><label>Content Type</label><select id="${key}Type"><option>Post</option><option>Reel</option><option>TikTok</option><option>Story</option><option>Live</option><option>Email</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Platform</label><input id="${key}Platform" type="text" placeholder="Facebook, TikTok, Instagram" /></div>
+            <div><label>Status</label><select id="${key}Status"><option>Idea</option><option>Drafting</option><option>Ready</option><option>Posted</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Publish Date</label><input id="${key}Date" type="date" /></div>
+            <div><label>CTA / Goal</label><input id="${key}Goal" type="text" placeholder="DM, comment, visibility, sale" /></div>
+          </div>
+          <label>Content Notes</label>
+          <textarea id="${key}Notes"></textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-content" data-type="${type}">Save Content</button>
+            <button class="btn ghost" data-action="content-to-calendar" data-type="${type}">Save Content + Add to Calendar</button>
+            <button class="btn gold" data-gform="${sectionId}">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>${title}</h3>
+          <div class="list">
+            ${list.length ? list.map((item, i) => `
+              <div class="item">
+                <div class="item-head">
+                  <div><strong>${escapeHtml(item.title || '')}</strong><br><span class="muted">${escapeHtml(item.platform || '')}</span></div>
+                  <span class="tag">${escapeHtml(item.status || '')}</span>
+                </div>
+                <div class="muted">${escapeHtml(item.type || '')} ${item.date ? '• ' + escapeHtml(item.date) : ''} ${item.goal ? '• ' + escapeHtml(item.goal) : ''}</div>
+                <div style="margin-top:8px;">${escapeHtml(item.notes || '')}</div>
+                <div class="split-actions">
+                  <button class="btn secondary small" data-action="load-content-form" data-type="${type}" data-index="${i}">Edit</button>
+                  <button class="btn ghost small" data-action="content-item-to-calendar" data-type="${type}" data-index="${i}">Add to Calendar</button>
+                  <button class="btn ghost small danger" data-action="delete-content" data-type="${type}" data-index="${i}">Delete</button>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">No content saved yet.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function calendarHtml() {
+      const month = state.calendarViewMonth || todayMonth();
+      const selectedDate = state.selectedCalendarDate || todayDate();
+      return `
+        <div class="grid two">
+          <div class="panel">
+            <div class="calendar-toolbar">
+              <div class="section-header">
+                <h3>Month Calendar</h3>
+              </div>
+              <div class="split-actions">
+                <button class="btn ghost small" data-action="prev-month">Prev</button>
+                <input id="calendarMonthPicker" type="month" value="${escapeHtml(month)}" />
+                <button class="btn ghost small" data-action="next-month">Next</button>
+              </div>
+            </div>
+            <div class="calendar-grid">
+              ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="dow">${d}</div>`).join('')}
+              ${buildCalendarGrid(month, selectedDate)}
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Add Calendar Item</h3>
+            <div class="row">
+              <div><label>Title</label><input id="calendarTitle" type="text" /></div>
+              <div><label>Type</label><select id="calendarType"><option>Task</option><option>Lead Follow-Up</option><option>Content</option><option>Call</option></select></div>
+            </div>
+            <div class="row">
+              <div><label>Date & Time</label><input id="calendarDate" type="datetime-local" value="${selectedDate}T12:00" /></div>
+              <div><label>Related To</label><input id="calendarRelated" type="text" placeholder="LWA or Your Business" /></div>
+            </div>
+            <label>Notes</label>
+            <textarea id="calendarNotes"></textarea>
+            <div class="split-actions">
+              <button class="btn" data-action="save-calendar-item">Save Calendar Item</button>
+              <button class="btn gold" data-gform="calendar">Save to Google Form</button>
+            </div>
+            <div class="status"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Items for ${escapeHtml(selectedDate)}</h3>
+          <div class="list">
+            ${getCalendarItemsForDate(selectedDate).length ? getCalendarItemsForDate(selectedDate).map((item, i) => `
+              <div class="item">
+                <div class="item-head">
+                  <div><strong>${escapeHtml(item.title || '')}</strong><br /><span class="muted">${escapeHtml(item.related || '')}</span></div>
+                  <span class="tag">${escapeHtml(item.type || '')}</span>
+                </div>
+                <div class="muted">${escapeHtml(item.date || '')}</div>
+                <div style="margin-top:8px;">${escapeHtml(item.notes || '')}</div>
+                <div class="split-actions">
+                  <button class="btn secondary small" data-action="load-calendar-form" data-index="${item.__index}">Edit</button>
+                  <button class="btn ghost small danger" data-action="delete-calendar" data-index="${item.__index}">Delete</button>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">No items on this date yet.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function buildCalendarGrid(monthValue, selectedDate) {
+      const [year, month] = monthValue.split('-').map(Number);
+      const first = new Date(year, month - 1, 1);
+      const start = new Date(first);
+      start.setDate(first.getDate() - first.getDay());
+      const html = [];
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const iso = dateToISO(d);
+        const items = getCalendarItemsForDate(iso).slice(0, 3);
+        html.push(`
+          <button class="day-cell ${d.getMonth() + 1 !== month ? 'other-month' : ''} ${iso === selectedDate ? 'selected' : ''}" data-action="select-calendar-date" data-date="${iso}">
+            <div class="day-number">${d.getDate()}</div>
+            ${items.map(item => `<span class="calendar-chip">${escapeHtml(item.title)}</span>`).join('')}
+          </button>
+        `);
+      }
+      return html.join('');
+    }
+
+    function brandHtml() {
+      const gf = state.brandSettings.googleForms;
+      return `
+        <div class="grid two">
+          <div class="panel">
+            <h3>Business Names</h3>
+            <label>Your Name</label>
+            <input id="ownerName" type="text" value="${escapeHtml(state.brandSettings.ownerName || '')}" />
+            <label>LWA Label</label>
+            <input id="lwaBusinessName" type="text" value="${escapeHtml(state.brandSettings.lwaBusinessName || '')}" />
+            <label>Your Separate Business Label</label>
+            <input id="personalBusinessName" type="text" value="${escapeHtml(state.brandSettings.personalBusinessName || '')}" />
+            <h3 style="margin-top:18px;">Platform Labels</h3>
+            ${Object.entries(state.brandSettings.platformNames).map(([key,val])=>`<label>${escapeHtml(key)}</label><input data-platform-key="${escapeHtml(key)}" class="platformNameInput" type="text" value="${escapeHtml(val)}" />`).join('')}
+            <div class="split-actions">
+              <button class="btn" data-action="save-brand">Save Brand Settings</button>
+              <button class="btn gold" data-gform="brand">Save to Google Form</button>
+            </div>
+            <div class="status"></div>
+          </div>
+          <div class="panel">
+            <h3>Google Form Setup</h3>
+            <p class="muted">Add one Google Form link for LWA and one Google Form link for Your Business. Each user should use their own forms so their data only goes to their own sheet.</p>
+            <label>LWA Google Form URL</label>
+            <input id="lwaFormURL" type="text" value="${escapeHtml(state.brandSettings.lwaFormURL || '')}" placeholder="Paste your LWA Google Form pre-filled link here" />
+            ${googleFormStatusMarkup(state.brandSettings.lwaFormURL, 'LWA')}
+            <label style="margin-top:12px;">Your Business Google Form URL</label>
+            <input id="businessFormURL" type="text" value="${escapeHtml(state.brandSettings.businessFormURL || '')}" placeholder="Paste your Your Business Google Form pre-filled link here" />
+            ${googleFormStatusMarkup(state.brandSettings.businessFormURL, 'Your Business')}
+            <p class="muted" style="margin-top:10px;">Paste a PRE-FILLED Google Form link for each side and tap save. Use Google Forms → 3 dots → Get pre-filled link, fill every field once, then paste that full link here. This version submits using the saved pre-filled mapping.</p>
+            <div class="muted" style="margin:8px 0 12px;">Use Google Forms → 3 dots → Get pre-filled link. Keep your form fields in the app order.</div><button class="btn" data-action="save-google-forms">Save Google Form Setup</button>
+            <div class="status">${extractGoogleFormId(state.brandSettings.lwaFormURL || '') || extractGoogleFormId(state.brandSettings.businessFormURL || '') ? 'Your saved form links will stay in the app on this device.' : 'No Google Form links have been saved yet.'}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function weeklyDashboardHtml() {
+      const d = state.weeklyDashboard;
+      return `
+        <div class="panel">
+          <h3>Weekly Dashboard</h3>
+          <div class="row">
+            <div><label>Week Of</label><input id="weekOf" type="date" value="${escapeHtml(d.weekOf || '')}" /></div>
+            <div><label>Follow-Up Goal</label><input id="followupGoal" type="number" value="${Number(d.followupGoal || 0)}" /></div>
+          </div>
+          <div class="tiny-row">
+            <div><label>LWA Lead Goal</label><input id="lwaGoal" type="number" value="${Number(d.lwaGoal || 0)}" /></div>
+            <div><label>Your Biz Lead Goal</label><input id="businessGoal" type="number" value="${Number(d.businessGoal || 0)}" /></div>
+            <div><label>LWA Content Goal</label><input id="lwaContentGoal" type="number" value="${Number(d.lwaContentGoal || 0)}" /></div>
+            <div><label>Your Biz Content Goal</label><input id="businessContentGoal" type="number" value="${Number(d.businessContentGoal || 0)}" /></div>
+          </div>
+          <label>Notes</label>
+          <textarea id="weeklyNotes">${escapeHtml(d.notes || '')}</textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-weekly-dashboard">Save</button>
+            <button class="btn gold" data-gform="weekly-dashboard">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+      `;
+    }
+
+    function weeklyFlowHtml() {
+      const d = state.weeklyFlow;
+      return `
+        <div class="panel">
+          <h3>Weekly Flow</h3>
+          ${['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(day => `
+            <label>${capitalize(day)}</label>
+            <textarea data-flow-day="${day}">${escapeHtml(d[day] || '')}</textarea>
+          `).join('')}
+          <div class="split-actions">
+            <button class="btn" data-action="save-weekly-flow">Save</button>
+            <button class="btn gold" data-gform="weekly-flow">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+      `;
+    }
+
+    function dailyHtml() {
+      const d = state.dailyTracker;
+      const p = state.brandSettings.platformNames;
+      return `
+        <div class="panel">
+          <h3>Daily Tracker</h3>
+          <div class="row">
+            <div><label>Date</label><input id="dailyDate" type="date" value="${escapeHtml(d.date || '')}" /></div>
+            <div>
+              <label>Platforms Used</label>
+              <div class="checkboxes">
+                ${Object.values(p).map(name => `<label><input class="platformCheck" type="checkbox" value="${escapeHtml(name)}" ${d.platforms.includes(name) ? 'checked' : ''} /> ${escapeHtml(name)}</label>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="tiny-row">
+            <div><label>Add People</label><input id="dailyAddPeople" type="number" value="${Number(d.addPeople || 0)}" /></div>
+            <div><label>Start Conversations</label><input id="dailyConversations" type="number" value="${Number(d.startConversations || 0)}" /></div>
+            <div><label>Follow Ups</label><input id="dailyFollowups" type="number" value="${Number(d.followUps || 0)}" /></div>
+            <div><label>Posts</label><input id="dailyPosts" type="number" value="${Number(d.posts || 0)}" /></div>
+          </div>
+          <div class="tiny-row">
+            <div><label>Stories</label><input id="dailyStories" type="number" value="${Number(d.stories || 0)}" /></div>
+            <div><label>Lives</label><input id="dailyLives" type="number" value="${Number(d.lives || 0)}" /></div>
+          </div>
+          <label>Notes</label>
+          <textarea id="dailyNotes">${escapeHtml(d.notes || '')}</textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-daily">Save</button>
+            <button class="btn gold" data-gform="daily">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+      `;
+    }
+
+    function affiliateHtml() {
+      const d = state.affiliateHealth;
+      return `
+        <div class="panel">
+          <h3>Affiliate Health</h3>
+          <div class="tiny-row">
+            <div><label>Active Affiliates</label><input id="activeAffiliates" type="number" value="${Number(d.activeAffiliates || 0)}" /></div>
+            <div><label>Check-Ins Done</label><input id="checkinsDone" type="number" value="${Number(d.checkinsDone || 0)}" /></div>
+            <div><label>Pending Support</label><input id="pendingSupport" type="number" value="${Number(d.pendingSupport || 0)}" /></div>
+          </div>
+          <label>Wins</label>
+          <textarea id="affiliateWins">${escapeHtml(d.wins || '')}</textarea>
+          <label>Needs Attention</label>
+          <textarea id="affiliateNeeds">${escapeHtml(d.needsAttention || '')}</textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-affiliate">Save</button>
+            <button class="btn gold" data-gform="affiliate">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+      `;
+    }
+
+    function ambassadorHtml() {
+      return `
+        <div class="panel">
+          <div class="section-header">
+            <h3>Add Ambassador Prospect</h3>
+            <button class="btn ghost small" data-action="clear-ambassador-form">Clear Form</button>
+          </div>
+          <div class="row">
+            <div><label>Name</label><input id="ambName" type="text" /></div>
+            <div><label>Status</label><select id="ambStatus"><option>New</option><option>Contacted</option><option>Interested</option><option>Pending</option><option>Joined</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Platform</label><input id="ambPlatform" type="text" /></div>
+            <div><label>Date</label><input id="ambDate" type="date" /></div>
+          </div>
+          <label>Notes</label>
+          <textarea id="ambNotes"></textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-ambassador">Save Prospect</button>
+            <button class="btn gold" data-gform="ambassador">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Pipeline</h3>
+          <div class="list">
+            ${state.ambassadorPipeline.length ? state.ambassadorPipeline.map((item, i) => `
+              <div class="item">
+                <div class="item-head">
+                  <div><strong>${escapeHtml(item.name || '')}</strong><br><span class="muted">${escapeHtml(item.platform || '')}</span></div>
+                  <span class="tag">${escapeHtml(item.status || '')}</span>
+                </div>
+                <div class="muted">${escapeHtml(item.date || '')}</div>
+                <div style="margin-top:8px;">${escapeHtml(item.notes || '')}</div>
+                <div class="split-actions">
+                  <button class="btn secondary small" data-action="load-ambassador-form" data-index="${i}">Edit</button>
+                  <button class="btn ghost small danger" data-action="delete-ambassador" data-index="${i}">Delete</button>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">No ambassador prospects yet.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function reflectionHtml() {
+      const d = state.reflection;
+      return `
+        <div class="panel">
+          <h3>Reflection Section</h3>
+          <label>Today's Win</label>
+          <textarea id="reflectionWin">${escapeHtml(d.todayWin || '')}</textarea>
+          <label>Today's Lesson</label>
+          <textarea id="reflectionLesson">${escapeHtml(d.todayLesson || '')}</textarea>
+          <label>What I'm Grateful For</label>
+          <textarea id="reflectionGrateful">${escapeHtml(d.gratefulFor || '')}</textarea>
+          <label>Tomorrow's Focus</label>
+          <textarea id="reflectionTomorrow">${escapeHtml(d.tomorrowFocus || '')}</textarea>
+          <div class="split-actions">
+            <button class="btn" data-action="save-reflection">Save</button>
+            <button class="btn gold" data-gform="reflection">Save to Google Form</button>
+          </div>
+          <div class="status"></div>
+        </div>
+      `;
+    }
+
+    function bindGlobalEvents() {
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => { currentPage = btn.dataset.page; render(); });
+      document.getElementById('saveAllBtn').onclick = () => { persistState('Everything saved locally on this device.'); render(); };
+      document.getElementById('exportBtn').onclick = exportBackup;
+      document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+      document.getElementById('importFile').onchange = importBackup;
+      document.querySelectorAll('[data-gform]').forEach(btn => btn.onclick = () => sendCurrentSectionToGoogleForm(btn.dataset.gform));
+    }
+
+    function bindPageEvents() {
+      document.querySelectorAll('[data-action]').forEach(el => el.onclick = handleAction);
+      hydrateFormsForCurrentPage();
+      const monthPicker = document.getElementById('calendarMonthPicker');
+      if (monthPicker) monthPicker.onchange = (e) => { state.calendarViewMonth = e.target.value; persistState(); render(); };
+      const editBanner = document.getElementById('calendarEditBanner');
+      if (editBanner && document.body.dataset.calendarEditingIndex !== '') {
+        editBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function handleAction(e) {
+      const action = e.currentTarget.dataset.action;
+      if (action === 'save-dashboard') { state.weeklyDashboard.notes = document.getElementById('dashNotes').value; persistState(); }
+      if (action === 'save-lwa-lead') saveLead('lwa', false);
+      if (action === 'save-business-lead') saveLead('business', false);
+      if (action === 'add-lwa-lead-calendar') saveLead('lwa', true);
+      if (action === 'add-business-lead-calendar') saveLead('business', true);
+      if (action === 'load-lead-form') loadLeadForm(e.currentTarget.dataset.type, Number(e.currentTarget.dataset.index));
+      if (action === 'delete-lead') deleteLead(e.currentTarget.dataset.type, Number(e.currentTarget.dataset.index));
+      if (action === 'to-calendar') leadToCalendar(e.currentTarget.dataset.type, Number(e.currentTarget.dataset.index));
+      if (action === 'clear-lwa-form') clearLeadForm('lwa');
+      if (action === 'clear-business-form') clearLeadForm('business');
+      if (action === 'save-content') saveContent(e.currentTarget.dataset.type, false);
+      if (action === 'content-to-calendar') saveContent(e.currentTarget.dataset.type, true);
+      if (action === 'load-content-form') loadContentForm(e.currentTarget.dataset.type, Number(e.currentTarget.dataset.index));
+      if (action === 'content-item-to-calendar') contentItemToCalendar(e.currentTarget.dataset.type, Number(e.currentTarget.dataset.index));
+      if (action === 'delete-content') deleteContent(e.currentTarget.dataset.type, Number(e.currentTarget.dataset.index));
+      if (action === 'clear-lwaContent-form') clearContentForm('lwa');
+      if (action === 'clear-businessContent-form') clearContentForm('business');
+      if (action === 'save-calendar-item') saveCalendarItem();
+      if (action === 'load-calendar-form') loadCalendarForm(Number(e.currentTarget.dataset.index));
+      if (action === 'delete-calendar') deleteCalendar(Number(e.currentTarget.dataset.index));
+      if (action === 'select-calendar-date') { state.selectedCalendarDate = e.currentTarget.dataset.date; persistState(); }
+      if (action === 'prev-month') shiftCalendarMonth(-1);
+      if (action === 'next-month') shiftCalendarMonth(1);
+      if (action === 'save-brand') saveBrand();
+      if (action === 'save-lwa-settings') saveSectionSettings('lwa');
+      if (action === 'save-business-settings') saveSectionSettings('business');
+      if (action === 'save-google-forms') saveGoogleForms();
+      if (action === 'save-weekly-dashboard') saveWeeklyDashboard();
+      if (action === 'save-weekly-flow') saveWeeklyFlow();
+      if (action === 'save-daily') saveDaily();
+      if (action === 'save-affiliate') saveAffiliate();
+      if (action === 'save-ambassador') saveAmbassador();
+      if (action === 'load-ambassador-form') loadAmbassadorForm(Number(e.currentTarget.dataset.index));
+      if (action === 'delete-ambassador') deleteAmbassador(Number(e.currentTarget.dataset.index));
+      if (action === 'clear-ambassador-form') clearAmbassadorForm();
+      if (action === 'save-reflection') saveReflection();
+      render();
+    }
+
+    function hydrateFormsForCurrentPage() {
+      if (currentPage === 'lwa') fillLeadInputs('lwa');
+      if (currentPage === 'business') fillLeadInputs('business');
+      if (currentPage === 'lwa-content') fillContentInputs('lwa');
+      if (currentPage === 'business-content') fillContentInputs('business');
+      if (currentPage === 'calendar' && document.body.dataset.calendarEditingIndex !== undefined) fillCalendarInputs();
+      if (currentPage === 'ambassador' && document.body.dataset.ambassadorEditingIndex !== undefined) fillAmbassadorInputs();
+    }
+
+    function getLeadFormKey(type) { return type === 'lwa' ? 'lwaLeadDraft' : 'businessLeadDraft'; }
+    function getContentFormKey(type) { return type === 'lwa' ? 'lwaContentDraft' : 'businessContentDraft'; }
+
+    function emptyLeadDraft() { return { name:'', status:'New', platform:'', followUp:'24 Hour', date:'', followUpDate:'', notes:'' }; }
+    function emptyContentDraft() { return { title:'', type:'Post', platform:'', status:'Idea', date:'', goal:'', notes:'' }; }
+    function emptyAmbassadorDraft() { return { name:'', status:'New', platform:'', date:'', notes:'' }; }
+    function emptyCalendarDraft() { return { title:'', type:'Task', date: `${state.selectedCalendarDate || todayDate()}T12:00`, related:'', notes:'' }; }
+
+    function readLeadFormValues(type) {
+      const prefix = type === 'lwa' ? 'lwa' : 'business';
+      const draft = state[getLeadFormKey(type)] || emptyLeadDraft();
+      const nameEl = document.getElementById(prefix + 'Name');
+      if (!nameEl) return draft;
+      return {
+        name: getVal(prefix + 'Name') || '',
+        status: getVal(prefix + 'Status') || draft.status || 'New',
+        platform: getVal(prefix + 'Platform') || '',
+        source: getVal(prefix + 'Platform') || '',
+        followUp: getVal(prefix + 'Follow') || draft.followUp || '24 Hour',
+        date: getVal(prefix + 'Date') || '',
+        followUpDate: getVal(prefix + 'CustomDate') || '',
+        notes: getVal(prefix + 'Notes') || ''
+      };
+    }
+
+    function readContentFormValues(type) {
+      const key = type === 'lwa' ? 'lwaContent' : 'businessContent';
+      const draft = state[getContentFormKey(type)] || emptyContentDraft();
+      const titleEl = document.getElementById(key + 'Title');
+      if (!titleEl) return draft;
+      return {
+        title: getVal(key + 'Title') || '',
+        type: getVal(key + 'Type') || draft.type || 'Post',
+        platform: getVal(key + 'Platform') || '',
+        status: getVal(key + 'Status') || draft.status || 'Idea',
+        date: getVal(key + 'Date') || '',
+        goal: getVal(key + 'Goal') || '',
+        notes: getVal(key + 'Notes') || ''
+      };
+    }
+
+    function currentLeadDraft(type) { return readLeadFormValues(type); }
+    function currentContentDraft(type) { return readContentFormValues(type); }
+
+    function fillLeadInputs(type) {
+      const prefix = type === 'lwa' ? 'lwa' : 'business';
+      const draft = currentLeadDraft(type);
+      setVal(prefix + 'Name', draft.name);
+      setVal(prefix + 'Status', draft.status || 'New');
+      setVal(prefix + 'Platform', draft.platform);
+      setVal(prefix + 'Follow', draft.followUp || '24 Hour');
+      setVal(prefix + 'Date', draft.date);
+      setVal(prefix + 'CustomDate', draft.followUpDate);
+      setVal(prefix + 'Notes', draft.notes);
+    }
+
+    function fillContentInputs(type) {
+      const key = type === 'lwa' ? 'lwaContent' : 'businessContent';
+      const draft = currentContentDraft(type);
+      setVal(key + 'Title', draft.title);
+      setVal(key + 'Type', draft.type || 'Post');
+      setVal(key + 'Platform', draft.platform);
+      setVal(key + 'Status', draft.status || 'Idea');
+      setVal(key + 'Date', draft.date);
+      setVal(key + 'Goal', draft.goal);
+      setVal(key + 'Notes', draft.notes);
+    }
+
+    function fillCalendarInputs() {
+      const d = state.calendarDraft || emptyCalendarDraft();
+      setVal('calendarTitle', d.title);
+      setVal('calendarType', d.type || 'Task');
+      setVal('calendarDate', d.date);
+      setVal('calendarRelated', d.related);
+      setVal('calendarNotes', d.notes);
+    }
+
+    function fillAmbassadorInputs() {
+      const d = state.ambassadorDraft || emptyAmbassadorDraft();
+      setVal('ambName', d.name);
+      setVal('ambStatus', d.status || 'New');
+      setVal('ambPlatform', d.platform);
+      setVal('ambDate', d.date);
+      setVal('ambNotes', d.notes);
+    }
+
+    function saveLead(type, addToCalendar) {
+      const prefix = type === 'lwa' ? 'lwa' : 'business';
+      const arr = type === 'lwa' ? state.lwaLeads : state.businessLeads;
+      const draft = {
+        name: getVal(prefix + 'Name'),
+        status: getVal(prefix + 'Status'),
+        platform: getVal(prefix + 'Platform'),
+        followUp: getVal(prefix + 'Follow'),
+        date: getVal(prefix + 'Date'),
+        followUpDate: getVal(prefix + 'CustomDate') || computeFollowup(getVal(prefix + 'Date'), getVal(prefix + 'Follow')),
+        notes: getVal(prefix + 'Notes')
+      };
+      if (!draft.name) return alert('Please add a lead name.');
+      const editAttr = `${prefix}Editing`;
+      const idx = document.body.dataset[editAttr];
+      if (idx !== undefined && idx !== '') arr[Number(idx)] = draft; else arr.push(draft);
+      state[getLeadFormKey(type)] = emptyLeadDraft();
+      document.body.dataset[editAttr] = '';
+      if (addToCalendar) addItemToCalendar({ title: `Follow up: ${draft.name}`, type: 'Lead Follow-Up', date: draft.followUpDate ? `${draft.followUpDate}T12:00` : `${todayDate()}T12:00`, related: type === 'lwa' ? state.brandSettings.lwaBusinessName : state.brandSettings.personalBusinessName, notes: draft.notes });
+      persistState('Lead saved.');
+    }
+
+    function loadLeadForm(type, index) {
+      const arr = type === 'lwa' ? state.lwaLeads : state.businessLeads;
+      state[getLeadFormKey(type)] = { ...arr[index] };
+      document.body.dataset[`${type === 'lwa' ? 'lwa' : 'business'}Editing`] = String(index);
+      persistState('Lead loaded into form.');
+    }
+
+    function clearLeadForm(type) {
+      state[getLeadFormKey(type)] = emptyLeadDraft();
+      document.body.dataset[`${type === 'lwa' ? 'lwa' : 'business'}Editing`] = '';
+      persistState('Lead form cleared.');
+    }
+
+    function deleteLead(type, index) {
+      (type === 'lwa' ? state.lwaLeads : state.businessLeads).splice(index, 1);
+      persistState('Lead deleted.');
+    }
+
+    function leadToCalendar(type, index) {
+      const lead = (type === 'lwa' ? state.lwaLeads : state.businessLeads)[index];
+      addItemToCalendar({ title: `Follow up: ${lead.name}`, type: 'Lead Follow-Up', date: lead.followUpDate ? `${lead.followUpDate}T12:00` : `${todayDate()}T12:00`, related: type === 'lwa' ? state.brandSettings.lwaBusinessName : state.brandSettings.personalBusinessName, notes: lead.notes || '' });
+      persistState('Lead added to calendar.');
+    }
+
+    function saveContent(type, addToCalendar) {
+      const arr = type === 'lwa' ? state.lwaContent : state.businessContent;
+      const key = type === 'lwa' ? 'lwaContent' : 'businessContent';
+      const draft = {
+        title: getVal(key + 'Title'),
+        type: getVal(key + 'Type'),
+        platform: getVal(key + 'Platform'),
+        status: getVal(key + 'Status'),
+        date: getVal(key + 'Date'),
+        goal: getVal(key + 'Goal'),
+        notes: getVal(key + 'Notes')
+      };
+      if (!draft.title) return alert('Please add a content title.');
+      const editAttr = `${key}Editing`;
+      const idx = document.body.dataset[editAttr];
+      if (idx !== undefined && idx !== '') arr[Number(idx)] = draft; else arr.push(draft);
+      state[getContentFormKey(type)] = emptyContentDraft();
+      document.body.dataset[editAttr] = '';
+      if (addToCalendar) addItemToCalendar({ title: draft.title, type: 'Content', date: `${draft.date || todayDate()}T12:00`, related: type === 'lwa' ? 'LWA Content' : 'Your Business Content', notes: draft.notes || '' });
+      persistState('Content saved.');
+    }
+
+    function loadContentForm(type, index) {
+      const arr = type === 'lwa' ? state.lwaContent : state.businessContent;
+      const key = type === 'lwa' ? 'lwaContent' : 'businessContent';
+      state[getContentFormKey(type)] = { ...arr[index] };
+      document.body.dataset[`${key}Editing`] = String(index);
+      persistState('Content loaded into form.');
+    }
+
+    function clearContentForm(type) {
+      const key = type === 'lwa' ? 'lwaContent' : 'businessContent';
+      state[getContentFormKey(type)] = emptyContentDraft();
+      document.body.dataset[`${key}Editing`] = '';
+      persistState('Content form cleared.');
+    }
+
+    function deleteContent(type, index) {
+      (type === 'lwa' ? state.lwaContent : state.businessContent).splice(index, 1);
+      persistState('Content deleted.');
+    }
+
+    function contentItemToCalendar(type, index) {
+      const item = (type === 'lwa' ? state.lwaContent : state.businessContent)[index];
+      addItemToCalendar({ title: item.title, type: 'Content', date: `${item.date || todayDate()}T12:00`, related: type === 'lwa' ? 'LWA Content' : 'Your Business Content', notes: item.notes || '' });
+      persistState('Content added to calendar.');
+    }
+
+    function saveCalendarItem() {
+      const draft = {
+        title: getVal('calendarTitle'),
+        type: getVal('calendarType'),
+        date: getVal('calendarDate'),
+        related: getVal('calendarRelated'),
+        notes: getVal('calendarNotes')
+      };
+      if (!draft.title) return alert('Please add a title.');
+      const idx = document.body.dataset.calendarEditingIndex;
+      if (idx !== undefined && idx !== '') state.calendarItems[Number(idx)] = draft; else state.calendarItems.push(draft);
+      state.calendarDraft = emptyCalendarDraft();
+      document.body.dataset.calendarEditingIndex = '';
+      if (draft.date) {
+        state.selectedCalendarDate = draft.date.slice(0,10);
+        state.calendarViewMonth = draft.date.slice(0,7);
+      }
+      persistState('Calendar item saved.');
+    }
+
+    function loadCalendarForm(index) {
+      const item = state.calendarItems[index];
+      state.calendarDraft = { ...item };
+      document.body.dataset.calendarEditingIndex = String(index);
+      if (item && item.date) {
+        state.selectedCalendarDate = item.date.slice(0,10);
+        state.calendarViewMonth = item.date.slice(0,7);
+      }
+      persistState('Calendar item loaded into form. Scroll up to edit, then press Save Calendar Item.');
+    }
+
+    function deleteCalendar(index) {
+      state.calendarItems.splice(index, 1);
+      persistState('Calendar item deleted.');
+    }
+
+    function shiftCalendarMonth(amount) {
+      const [y,m] = (state.calendarViewMonth || todayMonth()).split('-').map(Number);
+      const d = new Date(y, m - 1 + amount, 1);
+      state.calendarViewMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      persistState();
+    }
+
+    function saveSectionSettings(type) {
+      const isLwa = type === 'lwa';
+      const prefix = isLwa ? 'lwaSettings' : 'businessSettings';
+      const target = isLwa ? state.lwaSectionSettings : state.businessSectionSettings;
+      target.businessName = getVal(prefix + 'BusinessName');
+      target.mainOffer = getVal(prefix + 'MainOffer');
+      target.currentGoal = getVal(prefix + 'CurrentGoal');
+      target.bestPlatform = getVal(prefix + 'BestPlatform');
+      target.mainProduct = getVal(prefix + 'MainProduct');
+      target.tagline = getVal(prefix + 'Tagline');
+      target.notes = getVal(prefix + 'Notes');
+      if (isLwa && target.businessName) state.brandSettings.lwaBusinessName = target.businessName;
+      if (!isLwa && target.businessName) state.brandSettings.personalBusinessName = target.businessName;
+      persistState(isLwa ? 'LWA settings saved.' : 'Business settings saved.');
+    }
+
+    function saveBrand() {
+      state.brandSettings.ownerName = getVal('ownerName');
+      state.brandSettings.lwaBusinessName = getVal('lwaBusinessName');
+      state.brandSettings.personalBusinessName = getVal('personalBusinessName');
+      state.lwaSectionSettings.businessName = state.brandSettings.lwaBusinessName || state.lwaSectionSettings.businessName;
+      state.businessSectionSettings.businessName = state.brandSettings.personalBusinessName || state.businessSectionSettings.businessName;
+      document.querySelectorAll('.platformNameInput').forEach(el => state.brandSettings.platformNames[el.dataset.platformKey] = el.value);
+      persistState('Brand settings saved.');
+    }
+
+    function saveGoogleForms() {
+      const lwaURL = normalizeGoogleFormUrl(getVal('lwaFormURL'));
+      const bizURL = normalizeGoogleFormUrl(getVal('businessFormURL'));
+      const lwaOk = !lwaURL || (!!extractGoogleFormId(lwaURL) && extractGoogleFormEntries(lwaURL).length > 0);
+      const bizOk = !bizURL || (!!extractGoogleFormId(bizURL) && extractGoogleFormEntries(bizURL).length > 0);
+      if (!lwaOk) return alert('Your LWA Google Form link does not look valid yet. Paste the full pre-filled Google Forms link.');
+      if (!bizOk) return alert('Your Business Google Form link does not look valid yet. Paste the full pre-filled Google Forms link.');
+      state.brandSettings.lwaFormURL = lwaURL;
+      state.brandSettings.businessFormURL = bizURL;
+      persistState('Google Form setup saved inside the app on this device. Use the full pre-filled link for each side.');
+    }
+
+    function saveWeeklyDashboard() {
+      state.weeklyDashboard = {
+        weekOf: getVal('weekOf'),
+        lwaGoal: Number(getVal('lwaGoal') || 0),
+        businessGoal: Number(getVal('businessGoal') || 0),
+        lwaContentGoal: Number(getVal('lwaContentGoal') || 0),
+        businessContentGoal: Number(getVal('businessContentGoal') || 0),
+        followupGoal: Number(getVal('followupGoal') || 0),
+        notes: getVal('weeklyNotes')
+      };
+      persistState('Weekly dashboard saved.');
+    }
+
+    function saveWeeklyFlow() {
+      document.querySelectorAll('[data-flow-day]').forEach(el => state.weeklyFlow[el.dataset.flowDay] = el.value);
+      persistState('Weekly flow saved.');
+    }
+
+    function saveDaily() {
+      state.dailyTracker = {
+        date: getVal('dailyDate'),
+        addPeople: Number(getVal('dailyAddPeople') || 0),
+        startConversations: Number(getVal('dailyConversations') || 0),
+        followUps: Number(getVal('dailyFollowups') || 0),
+        posts: Number(getVal('dailyPosts') || 0),
+        stories: Number(getVal('dailyStories') || 0),
+        lives: Number(getVal('dailyLives') || 0),
+        notes: getVal('dailyNotes'),
+        platforms: [...document.querySelectorAll('.platformCheck:checked')].map(x => x.value)
+      };
+      persistState('Daily tracker saved.');
+    }
+
+    function saveAffiliate() {
+      state.affiliateHealth = {
+        activeAffiliates: Number(getVal('activeAffiliates') || 0),
+        checkinsDone: Number(getVal('checkinsDone') || 0),
+        pendingSupport: Number(getVal('pendingSupport') || 0),
+        wins: getVal('affiliateWins'),
+        needsAttention: getVal('affiliateNeeds')
+      };
+      persistState('Affiliate health saved.');
+    }
+
+    function saveAmbassador() {
+      const item = { name: getVal('ambName'), status: getVal('ambStatus'), platform: getVal('ambPlatform'), date: getVal('ambDate'), notes: getVal('ambNotes') };
+      if (!item.name) return alert('Please add a name.');
+      const idx = document.body.dataset.ambassadorEditingIndex;
+      if (idx !== undefined && idx !== '') state.ambassadorPipeline[Number(idx)] = item; else state.ambassadorPipeline.push(item);
+      state.ambassadorDraft = emptyAmbassadorDraft();
+      document.body.dataset.ambassadorEditingIndex = '';
+      persistState('Ambassador prospect saved.');
+    }
+
+    function loadAmbassadorForm(index) {
+      state.ambassadorDraft = { ...state.ambassadorPipeline[index] };
+      document.body.dataset.ambassadorEditingIndex = String(index);
+      persistState('Ambassador loaded into form.');
+    }
+
+    function clearAmbassadorForm() {
+      state.ambassadorDraft = emptyAmbassadorDraft();
+      document.body.dataset.ambassadorEditingIndex = '';
+      persistState('Ambassador form cleared.');
+    }
+
+    function deleteAmbassador(index) {
+      state.ambassadorPipeline.splice(index, 1);
+      persistState('Ambassador prospect deleted.');
+    }
+
+    function saveReflection() {
+      state.reflection = { todayWin: getVal('reflectionWin'), todayLesson: getVal('reflectionLesson'), gratefulFor: getVal('reflectionGrateful'), tomorrowFocus: getVal('reflectionTomorrow') };
+      persistState('Reflection saved.');
+    }
+
+    function addItemToCalendar(item) {
+      state.calendarItems.push(item);
+      if (item.date) {
+        state.selectedCalendarDate = item.date.slice(0,10);
+        state.calendarViewMonth = item.date.slice(0,7);
+      }
+    }
+
+    function getCalendarItemsForDate(isoDate) {
+      return state.calendarItems.map((item, i) => ({ ...item, __index: i })).filter(item => (item.date || '').slice(0,10) === isoDate);
+    }
+
+    
+    function getSavedFormUrl(sectionId) {
+      const lwaSections = ['lwa', 'lwa-content', 'affiliate', 'ambassador', 'weekly-dashboard', 'weekly-flow', 'daily', 'reflection', 'dashboard'];
+      return lwaSections.includes(sectionId) ? (state.brandSettings.lwaFormURL || '') : (state.brandSettings.businessFormURL || '');
+    }
+
+    function extractGoogleFormId(url) {
+      const match = String(url || '').match(/\/forms\/d\/e\/([^\/]+)\/(?:formResponse|viewform)/);
+      return match ? match[1] : '';
+    }
+
+    function extractGoogleFormEntries(url) {
+      const str = String(url || '');
+      const qIndex = str.indexOf('?');
+      if (qIndex === -1) return [];
+      const params = new URLSearchParams(str.slice(qIndex + 1));
+      const out = [];
+      for (const [key, value] of params.entries()) {
+        if (/^entry\.\d+/.test(key)) out.push([key, value]);
+      }
+      return out;
+    }
+
+    function normalizeGoogleFormUrl(url) {
+      url = String(url || '').trim();
+      if (!url) return '';
+      return url;
+    }
+
+    function googleFormStatusMarkup(url, sideLabel) {
+      const ok = !!extractGoogleFormId(url);
+      const hasEntries = extractGoogleFormEntries(url).length > 0;
+      return `<div class="form-status ${ok && hasEntries ? 'connected' : 'missing'}">${ok && hasEntries ? `✔ ${sideLabel} pre-filled form connected` : `✱ ${sideLabel} pre-filled form not connected yet`}</div>`;
+    }
+
+    function getFormActionUrl(savedUrl) {
+      const str = String(savedUrl || '');
+      if (!str) return '';
+      const base = str.split('?')[0].replace('/viewform', '/formResponse');
+      const fullParams = new URLSearchParams(str.split('?')[1] || '');
+      const passthrough = new URLSearchParams();
+      ['usp','fbzx','pageHistory','draftResponse'].forEach(k => { if (fullParams.has(k)) passthrough.append(k, fullParams.get(k)); });
+      const qs = passthrough.toString();
+      return qs ? `${base}?${qs}` : base;
+    }
+
+    function groupEntryKeys(entryPairs) {
+      const groups = [];
+      const seen = new Map();
+      for (const [key] of entryPairs) {
+        const m = key.match(/^(entry\.\d+)/);
+        if (!m) continue;
+        const root = m[1];
+        if (!seen.has(root)) {
+          const group = { root, keys: [] };
+          seen.set(root, group);
+          groups.push(group);
+        }
+        seen.get(root).keys.push(key);
+      }
+      return groups;
+    }
+
+    function fillGroupedEntry(group, value, form) {
+      const str = String(value ?? '');
+      const keys = group.keys;
+      const hasDate = keys.some(k => /_year|_month|_day/.test(k));
+      const hasTime = keys.some(k => /_hour|_minute/.test(k));
+      if (hasDate) {
+        let year = '', month = '', day = '';
+        const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) { year = m[1]; month = String(Number(m[2])); day = String(Number(m[3])); }
+        keys.forEach(key => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          if (/_year/.test(key)) input.value = year;
+          else if (/_month/.test(key)) input.value = month;
+          else if (/_day/.test(key)) input.value = day;
+          else input.value = str;
+          form.appendChild(input);
+        });
+        return;
+      }
+      if (hasTime) {
+        let hour = '', minute = '';
+        const m = str.match(/^(\d{1,2}):(\d{2})/);
+        if (m) { hour = String(Number(m[1])); minute = m[2]; }
+        keys.forEach(key => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          if (/_hour/.test(key)) input.value = hour;
+          else if (/_minute/.test(key)) input.value = minute;
+          else input.value = str;
+          form.appendChild(input);
+        });
+        return;
+      }
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = group.root;
+      input.value = str;
+      form.appendChild(input);
+    }
+
+function getSectionPayload(sectionId) {
+      switch(sectionId) {
+        case 'dashboard': return { notes: state.weeklyDashboard.notes, lwaLeads: state.lwaLeads.length, businessLeads: state.businessLeads.length, lwaContent: state.lwaContent.length, businessContent: state.businessContent.length };
+        case 'lwa': return { ...(state.lwaSectionSettings || {}), ...(state.lwaLeads.at(-1) || currentLeadDraft('lwa') || {}) };
+        case 'business': return { ...(state.businessSectionSettings || {}), ...(state.businessLeads.at(-1) || currentLeadDraft('business') || {}) };
+        case 'lwa-content': return state.lwaContent.at(-1) || currentContentDraft('lwa') || {};
+        case 'business-content': return state.businessContent.at(-1) || currentContentDraft('business') || {};
+        case 'calendar': return state.calendarItems.at(-1) || state.calendarDraft || {};
+        case 'brand': return { ownerName: state.brandSettings.ownerName, lwaBusinessName: state.brandSettings.lwaBusinessName, personalBusinessName: state.brandSettings.personalBusinessName };
+        case 'weekly-dashboard': return state.weeklyDashboard;
+        case 'weekly-flow': return state.weeklyFlow;
+        case 'daily': return state.dailyTracker;
+        case 'affiliate': return state.affiliateHealth;
+        case 'ambassador': return state.ambassadorPipeline.at(-1) || state.ambassadorDraft || {};
+        case 'reflection': return state.reflection;
+        default: return {};
+      }
+    }
+
+    function buildUnifiedPayload(sectionId) {
+      const prettySection = {
+        'dashboard': 'Dashboard',
+        'lwa': 'LWA Lead',
+        'business': 'Business Lead',
+        'lwa-content': 'LWA Content',
+        'business-content': 'Business Content',
+        'calendar': 'Calendar',
+        'brand': 'Brand Settings',
+        'weekly-dashboard': 'Weekly Dashboard',
+        'weekly-flow': 'Weekly Flow',
+        'daily': 'Daily Tracker',
+        'affiliate': 'Affiliate Health',
+        'ambassador': 'Ambassador Pipeline',
+        'reflection': 'Reflection'
+      };
+
+      let raw = getSectionPayload(sectionId) || {};
+      if (sectionId === 'lwa') raw = { ...(state.lwaSectionSettings || {}), ...readLeadFormValues('lwa') };
+      if (sectionId === 'business') raw = { ...(state.businessSectionSettings || {}), ...readLeadFormValues('business') };
+      if (sectionId === 'lwa-content') raw = readContentFormValues('lwa');
+      if (sectionId === 'business-content') raw = readContentFormValues('business');
+      if (sectionId === 'calendar') raw = {
+        title: getVal('calendarTitle') || (state.calendarDraft || {}).title || '',
+        type: getVal('calendarType') || (state.calendarDraft || {}).type || '',
+        date: getVal('calendarDate') || (state.calendarDraft || {}).date || '',
+        related: getVal('calendarRelated') || (state.calendarDraft || {}).related || '',
+        notes: getVal('calendarNotes') || (state.calendarDraft || {}).notes || ''
+      };
+
+      const sectionValue = prettySection[sectionId] || sectionId;
+      const nameValue = raw.name || raw.businessName || raw.ownerName || raw.title || '';
+      const sourceValue = raw.source || raw.platform || raw.related || '';
+      const dateValue = raw.date || raw.weekOf || '';
+      const statusValue = raw.status || '';
+      const offerValue = raw.offer || raw.mainOffer || raw.type || '';
+      const nextActionValue = raw.nextAction || raw.followUp || raw.tomorrowFocus || raw.tagline || '';
+      const contentTypeValue = raw.contentType || raw.type || '';
+      const platformValue = raw.platform || (Array.isArray(raw.platforms) ? raw.platforms.join(', ') : raw.bestPlatform || '');
+      const notesValue = raw.notes || raw.description || raw.needsAttention || raw.wins || '';
+      const weeklyGoalValue = raw.weeklyGoal || raw.lwaGoal || raw.businessGoal || raw.goal || raw.currentGoal || '';
+      const dailyTasksValue = raw.dailyTasks || [raw.addPeople, raw.startConversations, raw.followUps, raw.posts, raw.stories, raw.lives].filter(v => v !== undefined && v !== '').join(', ');
+      const reflectionValue = raw.reflection || raw.todayLesson || raw.todayWin || raw.gratefulFor || '';
+      const businessGoalValue = raw.businessGoal || raw.currentGoal || '';
+      const productValue = raw.product || raw.mainProduct || '';
+      const titleValue = raw.title || '';
+      const descriptionValue = raw.description || '';
+      const timeValue = raw.time || '';
+
+      const data = {
+        section: sectionValue || '',
+        name: nameValue || '',
+        source: sourceValue || '',
+        date: dateValue || '',
+        status: statusValue || '',
+        offer: offerValue || '',
+        nextAction: nextActionValue || '',
+        contentType: contentTypeValue || '',
+        platform: platformValue || '',
+        notes: notesValue || '',
+        weeklyGoal: weeklyGoalValue || '',
+        dailyTasks: dailyTasksValue || '',
+        reflection: reflectionValue || '',
+        businessGoal: businessGoalValue || '',
+        product: productValue || '',
+        title: titleValue || '',
+        description: descriptionValue || '',
+        time: timeValue || ''
+      };
+
+      Object.keys(data).forEach(k => {
+        if (Array.isArray(data[k])) data[k] = data[k].join(', ');
+        else if (data[k] && typeof data[k] === 'object') data[k] = JSON.stringify(data[k]);
+        else if (data[k] == null) data[k] = '';
+      });
+      return data;
+    }
+
+    
+
+    function upsertCalendarItemFromGoogleForm(sectionId, payload) {
+      const relatedMap = {
+        'lwa': 'LWA Lead',
+        'business': 'Business Lead',
+        'lwa-content': 'LWA Content',
+        'business-content': 'Business Content',
+        'weekly-dashboard': 'Weekly Dashboard',
+        'weekly-flow': 'Weekly Flow',
+        'daily': 'Daily Tracker',
+        'affiliate': 'Affiliate Health',
+        'ambassador': 'Ambassador Pipeline',
+        'reflection': 'Reflection'
+      };
+      const related = relatedMap[sectionId];
+      if (!related || sectionId === 'calendar' || sectionId === 'brand' || sectionId === 'dashboard') return;
+
+      let rawDate = String(payload.date || '').trim();
+      let calendarDate = '';
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(rawDate)) {
+        calendarDate = rawDate;
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+        calendarDate = `${rawDate}T12:00`;
+      } else if (/^\d{4}-\d{2}$/.test(rawDate)) {
+        calendarDate = `${rawDate}-01T12:00`;
+      } else {
+        calendarDate = `${todayDate()}T12:00`;
+      }
+
+      const title = String(
+        payload.title ||
+        payload.name ||
+        payload.offer ||
+        payload.product ||
+        payload.section ||
+        related
+      ).trim();
+      if (!title) return;
+
+      const noteBits = [
+        payload.status ? `Status: ${payload.status}` : '',
+        payload.nextAction ? `Next: ${payload.nextAction}` : '',
+        payload.notes ? `Notes: ${payload.notes}` : '',
+        payload.description ? `Description: ${payload.description}` : '',
+        payload.platform ? `Platform: ${payload.platform}` : ''
+      ].filter(Boolean);
+
+      const item = {
+        title,
+        type: sectionId.includes('content') ? 'Content' : (sectionId === 'daily' ? 'Task' : 'Follow Up'),
+        date: calendarDate,
+        related,
+        notes: noteBits.join(' | ')
+      };
+
+      const existingIndex = state.calendarItems.findIndex(x =>
+        (x.related || '') === item.related &&
+        (x.title || '') === item.title &&
+        String(x.date || '').slice(0,16) === String(item.date || '').slice(0,16)
+      );
+      if (existingIndex >= 0) state.calendarItems[existingIndex] = { ...state.calendarItems[existingIndex], ...item };
+      else addItemToCalendar(item);
+    }
+
+function sendCurrentSectionToGoogleForm(sectionId) {
+      const savedUrl = getSavedFormUrl(sectionId);
+      const sideLabel = ['lwa', 'lwa-content', 'affiliate', 'ambassador', 'weekly-dashboard', 'weekly-flow', 'daily', 'reflection', 'dashboard'].includes(sectionId) ? 'LWA' : 'Your Business';
+      const formId = extractGoogleFormId(savedUrl);
+      if (!formId) return alert(`Please save your ${sideLabel} Google Form URL in Brand Settings first, then tap Save Google Form Setup.`);
+
+      const entryPairs = extractGoogleFormEntries(savedUrl);
+      if (!entryPairs.length) {
+        return alert(`Your ${sideLabel} link needs to be a PRE-FILLED Google Form link. In Google Forms click the 3 dots → Get pre-filled link, fill every field once, copy that full link, and paste it into Brand Settings.`);
+      }
+
+      const standardOrder = ['section','name','source','date','status','offer','nextAction','contentType','platform','notes','weeklyGoal','dailyTasks','reflection','businessGoal','product','title','description','time'];
+      const payload = buildUnifiedPayload(sectionId);
+      const groups = groupEntryKeys(entryPairs);
+      const actionUrl = getFormActionUrl(savedUrl);
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = actionUrl;
+      form.target = 'hidden_gf_target';
+      form.style.display = 'none';
+
+      for (let i = 0; i < groups.length && i < standardOrder.length; i++) {
+        const fieldName = standardOrder[i];
+        fillGroupedEntry(groups[i], payload[fieldName] ?? '', form);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+      upsertCalendarItemFromGoogleForm(sectionId, payload);
+      setTimeout(() => form.remove(), 1500);
+      persistState('Google Form submit sent and pushed to calendar. Check your linked Google Sheet after a few seconds.');
+      alert('Google Form submit sent and pushed to calendar. Check your linked Google Sheet after a few seconds.');
+      render();
+    }
+
+    function exportBackup() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'legacybuilt-dual-tracker-backup.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          const merged = deepMerge(structuredClone(defaultState), data);
+          localStorage.setItem('legacybuilt_dual_tracker_state_v5', JSON.stringify(merged));
+          location.reload();
+        } catch {
+          alert('Invalid backup file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function computeFollowup(startDate, stage) {
+      if (!startDate) return '';
+      const d = new Date(startDate + 'T12:00:00');
+      const map = { '24 Hour': 1, '48 Hour': 2, '72 Hour': 3, '30 Day': 30, 'Custom': 0 };
+      d.setDate(d.getDate() + (map[stage] ?? 0));
+      return dateToISO(d);
+    }
+
+    function todayDate() { return dateToISO(new Date()); }
+    function todayMonth() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+    function dateToISO(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function capitalize(v) { return v.charAt(0).toUpperCase() + v.slice(1); }
+    function getVal(id) { return document.getElementById(id)?.value || ''; }
+    function setVal(id, value) { const el = document.getElementById(id); if (el) el.value = value || ''; }
+    function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, s => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
+
+    if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    render();
+  </script>
+</body>
+</html>
