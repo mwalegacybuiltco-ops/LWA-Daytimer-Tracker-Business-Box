@@ -1,0 +1,9 @@
+{
+  "name": "LegacyBuilt Dual Tracker PWA",
+  "short_name": "Dual Tracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#081120",
+  "theme_color": "#081120",
+  "icons": []
+}
